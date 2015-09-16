@@ -27,6 +27,7 @@
     "page": "options.html",
     "chrome_style": true
   },
+  "permissions": ["tabs"],
   "content_scripts": [
     {
       "matches": [

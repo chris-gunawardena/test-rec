@@ -1,30 +1,14 @@
 'use strict';
+/*jshint camelcase: false */
+console.log('contentscript.js');
 
-
+// Listen to every one of these events
 [ 'click', 'change', 'keypress', 'select', 'submit'].forEach(function(event_name){
 	document.documentElement.addEventListener(event_name, function(e){
 		console.log(e.type, e.target, e, getCleanCSSSelector(e.target));
 	}, true);
 });
 
-// Popup closed on start
-var popup_open = false;
-
-window.addEventListener("load", function() {
-	// Listen to events from popup
-	chrome.runtime.onMessage.addListener(function(message) {
-		alert('sss');
-		switch(message.type) {
-			case 'clickBrowserAction':
-				popup_open = !popup_open;
-				chrome.browserAction.setBadgeText({text: popup_open?'':'Recccc'});
-			break;
-		}
-		return true;
-	});
-}, true);
-
-/*jshint camelcase: false */
 function getCleanCSSSelector(element) {
 	if(!element) {return;}
 	var selector = element.tagName ? element.tagName.toLowerCase() : '';
@@ -98,9 +82,18 @@ function getCleanCSSSelector(element) {
 	return selector;
 }
 
+// Popup closed on start
+var popup_open = false;
+
+chrome.runtime.onMessage.addListener(function(data, sender, callback) {
+	alert(data.msg);
+	console.log('contentscript.onMessage', data, sender, callback);
+});
 
 
 
+
+// Add to all events
 // Object.getOwnPropertyNames(window).filter(function(key){
 // 	return key.slice(0,2)==='on';
 // }).map(function(key){

@@ -1,7 +1,7 @@
 'use strict';
 
-chrome.runtime.onInstalled.addListener(function (details) {
-  console.log('previousVersion', details.previousVersion);
-});
 
-console.log('\'Allo \'Allo! Event Page for Browser Action');
+// chrome.runtime.onMessage.addListener(function(data, sender, callback) {
+// 	console.log('onMessage', data, sender, callback);
+	
+// });
