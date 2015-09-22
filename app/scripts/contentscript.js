@@ -1,19 +1,26 @@
-
+'use strict';
 /*jshint camelcase: false */
 
-localStorage.setItem('rest_rec_data', {
+var data = {
 	state: 'stopped',
 	steps: ''
-});
+};
 
 chrome.runtime.onMessage.addListener(function(popup_data, sender, callback) {
 	console.log('contentscript.js: onMessage', popup_data);
 
-	if(popup_data.state) {
-		localStorage.getItem('rest_rec_data').state = popup_data.state;
-	}
+	data.state = popup_data.state;
 
-	callback(localStorage.getItem('rest_rec_data'));
+	// switch(data.msg) {
+	// 	case 'popup_open':
+	// 			//alert(data);
+	// 		break;
+
+	// 	default:
+	// 		data = data.data;
+	// 		break;
+	// }
+	callback(data);
 });
 
 
@@ -23,22 +30,20 @@ console.log('contentscript.js');
 // Listen to every one of these events
 [ 'click', 'change', 'keypress', 'select', 'submit'].forEach(function(event_name){
 	document.documentElement.addEventListener(event_name, function(e){
-		if(localStorage.getItem('rest_rec_data').state==='recording') {
-			switch(e.type) {
-				case 'click':
-					//console.log('driver.findElements(By.cssSelector("' + getCleanCSSSelector(e.target) + '")).get(0).click();');
-					console.log('$(\''+getCleanCSSSelector(e.target)+'\')');
-					localStorage.getItem('rest_rec_data').steps = localStorage.getItem('rest_rec_data').steps + 'driver.findElements(By.cssSelector("' + getCleanCSSSelector(e.target) + '")).get(0).click();\n';
-					break;
+		switch(e.type) {
+			case 'click':
+				//console.log('driver.findElements(By.cssSelector("' + getCleanCSSSelector(e.target) + '")).get(0).click();');
+				console.log('$(\''+getCleanCSSSelector(e.target)+'\')');
+				this.steps = this.steps + 'driver.findElements(By.cssSelector("' + getCleanCSSSelector(e.target) + '")).get(0).click();\n';
+				break;
 
-				case 'change':
-					console.log('driver.findElements(By.cssSelector("' + getCleanCSSSelector(e.target) + '")).get(0).click();');
-					console.log('$(\''+getCleanCSSSelector(e.target)+'\').val()');
-					break;
+			case 'change':
+				console.log('driver.findElements(By.cssSelector("' + getCleanCSSSelector(e.target) + '")).get(0).click();');
+				console.log('$(\''+getCleanCSSSelector(e.target)+'\').val()');
+				break;
 
-				default:
-					console.log(e.type, getCleanCSSSelector(e.target), e.target, e);
-			}
+			default:
+				console.log(e.type, getCleanCSSSelector(e.target), e.target, e);
 		}
 	}, true);
 });
