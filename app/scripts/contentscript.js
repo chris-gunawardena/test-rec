@@ -1,11 +1,45 @@
-'use strict';
+
 /*jshint camelcase: false */
+
+localStorage.setItem('rest_rec_data', {
+	state: 'stopped',
+	steps: ''
+});
+
+chrome.runtime.onMessage.addListener(function(popup_data, sender, callback) {
+	console.log('contentscript.js: onMessage', popup_data);
+
+	if(popup_data.state) {
+		localStorage.getItem('rest_rec_data').state = popup_data.state;
+	}
+
+	callback(localStorage.getItem('rest_rec_data'));
+});
+
+
+
 console.log('contentscript.js');
 
 // Listen to every one of these events
 [ 'click', 'change', 'keypress', 'select', 'submit'].forEach(function(event_name){
 	document.documentElement.addEventListener(event_name, function(e){
-		console.log(e.type, e.target, e, getCleanCSSSelector(e.target));
+		if(localStorage.getItem('rest_rec_data').state==='recording') {
+			switch(e.type) {
+				case 'click':
+					//console.log('driver.findElements(By.cssSelector("' + getCleanCSSSelector(e.target) + '")).get(0).click();');
+					console.log('$(\''+getCleanCSSSelector(e.target)+'\')');
+					localStorage.getItem('rest_rec_data').steps = localStorage.getItem('rest_rec_data').steps + 'driver.findElements(By.cssSelector("' + getCleanCSSSelector(e.target) + '")).get(0).click();\n';
+					break;
+
+				case 'change':
+					console.log('driver.findElements(By.cssSelector("' + getCleanCSSSelector(e.target) + '")).get(0).click();');
+					console.log('$(\''+getCleanCSSSelector(e.target)+'\').val()');
+					break;
+
+				default:
+					console.log(e.type, getCleanCSSSelector(e.target), e.target, e);
+			}
+		}
 	}, true);
 });
 
@@ -16,18 +50,36 @@ function getCleanCSSSelector(element) {
 
 	var tmp_selector = '';
 	var accuracy = document.querySelectorAll(selector).length;
+	var tmp_accuracy = accuracy;
 
-	if(element.dataset.automationId) {
-		selector = '[data-automation-id="' + element.dataset.automationId + '"]';
-		accuracy = document.querySelectorAll(selector).length;
-		if(accuracy===1) {return selector;}
-	}
+	// // automations id
+	// if(element.dataset.automationId) {
+	// 	tmp_selector = selector + '[data-automation-id="' + element.dataset.automationId + '"]';
+	// 	tmp_accuracy = document.querySelectorAll(tmp_selector).length;
+	// 	if(accuracy===1) {return tmp_accuracy;}
+	// 	if(tmp_accuracy<accuracy) {selector = tmp_selector;}
+	// }
 
 	if(element.id) {
-		selector = '#' + element.id.replace(/\./g, '\\.');
+		selector = selector + '#' + element.id.replace(/\./g, '\\.');
 		accuracy = document.querySelectorAll(selector).length;
 		if(accuracy===1) {return selector;}
 	}
+
+
+	for(var dataAttr in element.dataset) {
+		tmp_selector = selector + '[data-' +dataAttr + '="' +element.dataset[dataAttr] + '"]';
+		tmp_accuracy = document.querySelectorAll(tmp_selector).length;
+		if(tmp_accuracy===1)
+		{	return tmp_selector;
+		}
+		if(tmp_accuracy<accuracy)
+		{	selector = tmp_selector;
+			accuracy = tmp_accuracy;
+		}
+	}
+
+	//document.querySelectorAll( "#se_exotics-selections-1-2165217 > div:nth-child(2) .rc-content-exotic-selection-btn.btn.exotic-selected" )[0].dataset
 
 	if(element.className) {
 		tmp_selector = '.' + element.className.trim().replace(/ /g,'.');
@@ -82,13 +134,6 @@ function getCleanCSSSelector(element) {
 	return selector;
 }
 
-// Popup closed on start
-var popup_open = false;
-
-chrome.runtime.onMessage.addListener(function(data, sender, callback) {
-	alert(data.msg);
-	console.log('contentscript.onMessage', data, sender, callback);
-});
 
 
 
