@@ -1,49 +1,53 @@
-'use strict';
+
 /*jshint camelcase: false */
 
-var data = {
-	state: 'stopped',
+data = {
+	recording: false,
 	steps: ''
 };
 
-chrome.runtime.onMessage.addListener(function(popup_data, sender, callback) {
-	console.log('contentscript.js: onMessage', popup_data);
+chrome.runtime.onMessage.addListener(function(message, sender, callback) {
 
-	data.state = popup_data.state;
+	switch(message) {
 
-	// switch(data.msg) {
-	// 	case 'popup_open':
-	// 			//alert(data);
-	// 		break;
+		case 'Start recording':
+			data.recording = true;
+			data.steps = 'driver.get("http://localhost:4700/' + window.location.hash + "\");\n";
+			break;
 
-	// 	default:
-	// 		data = data.data;
-	// 		break;
-	// }
+		case 'Stop recording':
+			data.recording = false;
+			break;
+
+		case 'Clear':
+			data.recording = false;
+			data.steps = '';
+			break;
+	}
 	callback(data);
 });
 
 
-
-console.log('contentscript.js');
-
 // Listen to every one of these events
 [ 'click', 'change', 'keypress', 'select', 'submit'].forEach(function(event_name){
 	document.documentElement.addEventListener(event_name, function(e){
-		switch(e.type) {
-			case 'click':
-				//console.log('driver.findElements(By.cssSelector("' + getCleanCSSSelector(e.target) + '")).get(0).click();');
-				console.log('$(\''+getCleanCSSSelector(e.target)+'\')');
-				this.steps = this.steps + 'driver.findElements(By.cssSelector("' + getCleanCSSSelector(e.target) + '")).get(0).click();\n';
-				break;
+		if(data.recording) {
+			switch(e.type) {
+				case 'click':
+					//console.log('driver.findElements(By.cssSelector("' + getCleanCSSSelector(e.target) + '")).get(0).click();');
+					//console.log('$(\''+getCleanCSSSelector(e.target)+'\')');
+					data.steps = data.steps + 'driver.findElements(By.cssSelector("' + getCleanCSSSelector(e.target) + '")).get(0).click();\n';
+					console.log(data);
+					break;
 
-			case 'change':
-				console.log('driver.findElements(By.cssSelector("' + getCleanCSSSelector(e.target) + '")).get(0).click();');
-				console.log('$(\''+getCleanCSSSelector(e.target)+'\').val()');
-				break;
+				case 'change':
+					//console.log('driver.findElements(By.cssSelector("' + getCleanCSSSelector(e.target) + '")).get(0).click();');
+					console.log('$(\''+getCleanCSSSelector(e.target)+'\').val()');
+					break;
 
-			default:
-				console.log(e.type, getCleanCSSSelector(e.target), e.target, e);
+				default:
+					console.log(e.type, getCleanCSSSelector(e.target), e.target, e);
+			}			
 		}
 	}, true);
 });
