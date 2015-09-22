@@ -27,7 +27,7 @@
     "page": "options.html",
     "chrome_style": true
   },
-  "permissions": ["tabs"],
+  "permissions": ["tabs", "contextMenus"],
   "content_scripts": [
     {
       "matches": [
@@ -35,6 +35,7 @@
         "https://*/*"
       ],
       "js": [
+        "bower_components/jquery/dist/jquery.min.js",
         "scripts/contentscript.js"
       ],
       "run_at": "document_end",

@@ -5,14 +5,15 @@ data = {
 	recording: false,
 	steps: ''
 };
+last_right_clicked_element = null;
 
 chrome.runtime.onMessage.addListener(function(message, sender, callback) {
 
-	switch(message) {
+	switch(message.action) {
 
 		case 'Start recording':
 			data.recording = true;
-			data.steps = 'driver.get("http://localhost:4700/' + window.location.hash + "\");\n";
+			data.steps = 'driver.get("http://localhost:4700/' + window.location.hash + '");\n';
 			break;
 
 		case 'Stop recording':
@@ -23,26 +24,57 @@ chrome.runtime.onMessage.addListener(function(message, sender, callback) {
 			data.recording = false;
 			data.steps = '';
 			break;
+
+		case 'Wait for element':
+			if(data.recording) {
+				console.log('Wait for element: ' + last_right_clicked_element);
+				data.steps = data.steps + '(new WebDriverWait(driver, 10)).until(ExpectedConditions.visibilityOfAllElementsLocatedBy(By.cssSelector("' + last_right_clicked_element + '")));' + "\n";
+			}
+			break;
+
+		case 'Assert if exists':
+			if(data.recording) {
+				console.log('Assert if exists: ' + last_right_clicked_element);
+				data.steps = data.steps + 'assertEquals(driver.findElements(By.cssSelector("' + last_right_clicked_element + '")).size(), 1);' + "\n";
+			}
+			break;
+
+		case 'Assert for text':
+			if(data.recording) {
+				console.log('Assert for text: ' + last_right_clicked_element + ' = ' + $(last_right_clicked_element).text());
+				data.steps = data.steps + 'assertEquals(driver.findElements(By.cssSelector("' + last_right_clicked_element + '")).get(0).getText(), "' + $(last_right_clicked_element).text() + '");' + "\n";
+			}
+			break;
+
+		default:
+			console.log(message);
+			break;
 	}
-	callback(data);
+	if(callback) {
+		callback(data);
+	}
 });
 
 
 // Listen to every one of these events
-[ 'click', 'change', 'keypress', 'select', 'submit'].forEach(function(event_name){
+[ 'click', 'change', 'keypress', 'select', 'submit', 'mousedown'].forEach(function(event_name){
 	document.documentElement.addEventListener(event_name, function(e){
 		if(data.recording) {
 			switch(e.type) {
 				case 'click':
-					//console.log('driver.findElements(By.cssSelector("' + getCleanCSSSelector(e.target) + '")).get(0).click();');
-					//console.log('$(\''+getCleanCSSSelector(e.target)+'\')');
-					data.steps = data.steps + 'driver.findElements(By.cssSelector("' + getCleanCSSSelector(e.target) + '")).get(0).click();\n';
-					console.log(data);
+					console.log('click: ' + getCleanCSSSelector(e.target));
+					data.steps = data.steps + '(new WebDriverWait(driver, 10)).until(ExpectedConditions.visibilityOfAllElementsLocatedBy(By.cssSelector("' + getCleanCSSSelector(e.target) + '")));' + "\n";
+					data.steps = data.steps + 'driver.findElements(By.cssSelector("' + getCleanCSSSelector(e.target) + '")).get(0).click();\n\n';
 					break;
 
 				case 'change':
-					//console.log('driver.findElements(By.cssSelector("' + getCleanCSSSelector(e.target) + '")).get(0).click();');
-					console.log('$(\''+getCleanCSSSelector(e.target)+'\').val()');
+					console.log('change: ', getCleanCSSSelector(e.target) + ' ' + $(e.target).val());
+					data.steps = data.steps + '((JavascriptExecutor) driver).executeScript("$(\'' + getCleanCSSSelector(e.target) + '\').val(\'' + $(e.target).val() + '\').trigger(\'change\')");\n\n';
+					break;
+
+				case 'mousedown':
+					// Store this for later
+					last_right_clicked_element = getCleanCSSSelector(e.target);
 					break;
 
 				default:
@@ -51,6 +83,14 @@ chrome.runtime.onMessage.addListener(function(message, sender, callback) {
 		}
 	}, true);
 });
+
+document.addEventListener("mousedown", function(event){
+    //right click
+    if(event.button == 2) { 
+        clickedEl = event.target;
+    }
+}, true);
+
 
 function getCleanCSSSelector(element) {
 	if(!element) {return;}
@@ -77,7 +117,7 @@ function getCleanCSSSelector(element) {
 
 
 	for(var dataAttr in element.dataset) {
-		tmp_selector = selector + '[data-' +dataAttr + '="' +element.dataset[dataAttr] + '"]';
+		tmp_selector = selector + '[data-' +dataAttr + '=\'' +element.dataset[dataAttr] + '\']';
 		tmp_accuracy = document.querySelectorAll(tmp_selector).length;
 		if(tmp_accuracy===1)
 		{	return tmp_selector;
