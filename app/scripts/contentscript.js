@@ -13,7 +13,8 @@ chrome.runtime.onMessage.addListener(function(message, sender, callback) {
 
 		case 'Start recording':
 			data.recording = true;
-			data.steps = 'WebDriver driver = BaseTest.getDriver();\ndriver.get("http://localhost:4700/' + window.location.hash + '");\n\n';
+			data.steps = 'WebDriver driver = BaseTest.getDriver();\n';
+			data.steps = 'driver.get("http://localhost:4700/' + window.location.hash + '");\n\n';
 			break;
 
 		case 'Stop recording':
@@ -40,10 +41,25 @@ chrome.runtime.onMessage.addListener(function(message, sender, callback) {
 			}
 			break;
 
-		case 'Assert for text':
+		case 'Assert text':
 			if(data.recording) {
-				console.log('Assert for text: ' + last_right_clicked_element + ' = ' + $(last_right_clicked_element).text());
+				console.log('Assert text: ' + last_right_clicked_element + ' = ' + $(last_right_clicked_element).text());
 				data.steps = data.steps + 'assertEquals(select("' + last_right_clicked_element + '").getText(), "' + $(last_right_clicked_element).text() + '");' + "\n\n";
+			}
+			break;
+
+		case 'Scroll to element':
+			if(data.recording) {
+				console.log('Assert text: ' + last_right_clicked_element + ' = ' + $(last_right_clicked_element).text());
+				data.steps = data.steps + ' CustomConditions.scrollToElement(driver, "' + last_right_clicked_element + '");' + "\n";
+				data.steps = data.steps + 'waitUntil(elementHasStoppedMoving(select("' + last_right_clicked_element + '")));' + "\n\n";
+			}
+			break;
+
+		case 'Badge Click':
+			if(!data.recording){
+				console.log('Badge Click');
+				data.recording = true;
 			}
 			break;
 

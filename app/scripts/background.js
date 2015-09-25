@@ -25,11 +25,20 @@ chrome.contextMenus.create({
 });
 
 chrome.contextMenus.create({
-	'title': 'Assert for text',
+	'title': 'Assert text',
 	'contexts': ['page', 'selection', 'link'],
 	'onclick' : function(e) {
 		console.log(e);
-		send_msg_to_current_tab({ action: 'Assert for text', event: e});
+		send_msg_to_current_tab({ action: 'Assert text', event: e});
+	}
+});
+
+chrome.contextMenus.create({
+	'title': 'Scroll to element',
+	'contexts': ['page', 'selection', 'link'],
+	'onclick' : function(e) {
+		console.log(e);
+		send_msg_to_current_tab({ action: 'Scroll to element', event: e});
 	}
 });
 

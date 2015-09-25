@@ -6,16 +6,17 @@ var send_msg_to_current_tab = function(msg_data, callback){
 	chrome.tabs.query({currentWindow: true, active: true}, function(tab) {
 		chrome.tabs.sendMessage(tab[0].id, msg_data, callback);
 	});
-}
+};
 
 var update_ui = function(response_data) {
+	chrome.browserAction.setBadgeText({text: response_data.recording?'Rec':''});
 	$('#record-btn').text(response_data.recording?'Stop recording':'Start recording');
 	$('#steps-txt').text(response_data.steps);
-}
+};
 
-document.addEventListener('DOMContentLoaded', function(e) {
+var domready =  function(e) {
 	// get state from content script
-	send_msg_to_current_tab({ action: 'DOMContentLoaded' }, update_ui);
+	send_msg_to_current_tab({ action: 'Badge Click' }, update_ui);
 
 	//start/stop recording
 	$('#record-btn').on('click', function(e) {
@@ -34,4 +35,7 @@ document.addEventListener('DOMContentLoaded', function(e) {
 	$('#clear-btn').on('click', function(e) {
 		send_msg_to_current_tab({ action: 'Clear'}, update_ui);
 	});
-});
+};
+
+document.removeEventListener('DOMContentLoaded', domready);
+document.addEventListener('DOMContentLoaded', domready);
