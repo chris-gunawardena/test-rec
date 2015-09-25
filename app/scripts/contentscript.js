@@ -1,11 +1,12 @@
-
 /*jshint camelcase: false */
+/*global $:false */
 
-data = {
+var data = {
 	recording: false,
 	steps: ''
 };
-last_right_clicked_element = null;
+
+var last_right_clicked_element = null;
 
 chrome.runtime.onMessage.addListener(function(message, sender, callback) {
 
@@ -29,30 +30,30 @@ chrome.runtime.onMessage.addListener(function(message, sender, callback) {
 		case 'Wait for element':
 			if(data.recording) {
 				console.log('Wait for element: ' + last_right_clicked_element);
-				data.steps = data.steps + 'waitUntilElementIsVisible("' + last_right_clicked_element + '");' + "\n";
-				data.steps = data.steps + 'waitUntil(elementHasStoppedMoving(select("' + last_right_clicked_element + '")));' + "\n\n";
+				data.steps = data.steps + 'waitUntilElementIsVisible("' + last_right_clicked_element + '");' + '\n';
+				data.steps = data.steps + 'waitUntil(elementHasStoppedMoving(select("' + last_right_clicked_element + '")));' + '\n\n';
 			}
 			break;
 
 		case 'Assert if exists':
 			if(data.recording) {
 				console.log('Assert if exists: ' + last_right_clicked_element);
-				data.steps = data.steps + 'assertEquals(selectAll("' + last_right_clicked_element + '").size(), 1);' + "\n\n";
+				data.steps = data.steps + 'assertEquals(selectAll("' + last_right_clicked_element + '").size(), 1);' + '\n\n';
 			}
 			break;
 
 		case 'Assert text':
 			if(data.recording) {
 				console.log('Assert text: ' + last_right_clicked_element + ' = ' + $(last_right_clicked_element).text());
-				data.steps = data.steps + 'assertEquals(select("' + last_right_clicked_element + '").getText(), "' + $(last_right_clicked_element).text() + '");' + "\n\n";
+				data.steps = data.steps + 'assertEquals(select("' + last_right_clicked_element + '").getText(), "' + $(last_right_clicked_element).text() + '");' + '\n\n';
 			}
 			break;
 
 		case 'Scroll to element':
 			if(data.recording) {
 				console.log('Scroll to element: ' + last_right_clicked_element);
-				data.steps = data.steps + ' CustomConditions.scrollToElement(driver, "' + last_right_clicked_element + '");' + "\n";
-				data.steps = data.steps + 'waitUntil(elementHasStoppedMoving(select("' + last_right_clicked_element + '")));' + "\n\n";
+				data.steps = data.steps + ' CustomConditions.scrollToElement(driver, "' + last_right_clicked_element + '");' + '\n';
+				data.steps = data.steps + 'waitUntil(elementHasStoppedMoving(select("' + last_right_clicked_element + '")));' + '\n\n';
 			}
 			break;
 
@@ -80,7 +81,7 @@ chrome.runtime.onMessage.addListener(function(message, sender, callback) {
 			switch(e.type) {
 				case 'click':
 					console.log('click: ' + getCleanCSSSelector(e.target));
-					data.steps = data.steps + 'waitUntilElementIsVisible("' + getCleanCSSSelector(e.target) + '");' + "\n";
+					data.steps = data.steps + 'waitUntilElementIsVisible("' + getCleanCSSSelector(e.target) + '");' + '\n';
 					data.steps = data.steps + 'select("' + getCleanCSSSelector(e.target) + '").click();\n\n';
 					break;
 
@@ -100,14 +101,6 @@ chrome.runtime.onMessage.addListener(function(message, sender, callback) {
 		}
 	}, true);
 });
-
-document.addEventListener("mousedown", function(event){
-    //right click
-    if(event.button == 2) { 
-        clickedEl = event.target;
-    }
-}, true);
-
 
 function getCleanCSSSelector(element) {
 	if(!element) {return;}
@@ -135,7 +128,7 @@ function getCleanCSSSelector(element) {
 
 	for(var dataAttr in element.dataset) {
 		//To Dashed from Camel Case
-		tmp_selector = selector + '[data-' + dataAttr.replace(/([A-Z])/g, function($1){return "-"+$1.toLowerCase();}) + '=\'' +element.dataset[dataAttr] + '\']';
+		tmp_selector = selector + '[data-' + dataAttr.replace(/([A-Z])/g, function($1){return '-'+$1.toLowerCase();}) + '=\'' +element.dataset[dataAttr] + '\']';
 		tmp_accuracy = document.querySelectorAll(tmp_selector).length;
 		if(tmp_accuracy===1)
 		{	return tmp_selector;
@@ -200,18 +193,3 @@ function getCleanCSSSelector(element) {
 
 	return selector;
 }
-
-
-
-
-
-// Add to all events
-// Object.getOwnPropertyNames(window).filter(function(key){
-// 	return key.slice(0,2)==='on';
-// }).map(function(key){
-// 	return key.slice(2);
-// }).forEach(function(window){
-// 	document.addEventListener(eventName, function(event){
-// 		console.log(event.type. e.target, e);
-// 	});
-// });

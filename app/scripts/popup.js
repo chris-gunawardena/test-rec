@@ -1,5 +1,5 @@
-'use strict';
 /*jshint camelcase: false */
+/*global $:false */
 
 var send_msg_to_current_tab = function(msg_data, callback){
 	console.log('send_msg_to_current_tab', msg_data);
@@ -14,12 +14,12 @@ var update_ui = function(response_data) {
 	$('#steps-txt').text(response_data.steps);
 };
 
-var domready =  function(e) {
+var domready =  function() {
 	// get state from content script
 	send_msg_to_current_tab({ action: 'Badge Click' }, update_ui);
 
 	//start/stop recording
-	$('#record-btn').on('click', function(e) {
+	$('#record-btn').on('click', function() {
 		send_msg_to_current_tab({ action: $('#record-btn').text()}, update_ui);
 		switch( $('#record-btn').text() ) {
 			case 'Start recording':
@@ -32,7 +32,7 @@ var domready =  function(e) {
 	});
 
 	// clear recording
-	$('#clear-btn').on('click', function(e) {
+	$('#clear-btn').on('click', function() {
 		send_msg_to_current_tab({ action: 'Clear'}, update_ui);
 	});
 };
