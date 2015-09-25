@@ -50,7 +50,7 @@ chrome.runtime.onMessage.addListener(function(message, sender, callback) {
 
 		case 'Scroll to element':
 			if(data.recording) {
-				console.log('Assert text: ' + last_right_clicked_element + ' = ' + $(last_right_clicked_element).text());
+				console.log('Scroll to element: ' + last_right_clicked_element);
 				data.steps = data.steps + ' CustomConditions.scrollToElement(driver, "' + last_right_clicked_element + '");' + "\n";
 				data.steps = data.steps + 'waitUntil(elementHasStoppedMoving(select("' + last_right_clicked_element + '")));' + "\n\n";
 			}
