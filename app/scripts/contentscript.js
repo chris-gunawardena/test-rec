@@ -28,21 +28,22 @@ chrome.runtime.onMessage.addListener(function(message, sender, callback) {
 		case 'Wait for element':
 			if(data.recording) {
 				console.log('Wait for element: ' + last_right_clicked_element);
-				data.steps = data.steps + '(new WebDriverWait(driver, 10)).until(ExpectedConditions.visibilityOfAllElementsLocatedBy(By.cssSelector("' + last_right_clicked_element + '")));' + "\n";
+				data.steps = data.steps + 'waitUntilElementIsVisible("' + last_right_clicked_element + '");' + "\n";
+				data.steps = data.steps + 'waitUntil(elementHasStoppedMoving(select("' + last_right_clicked_element + '")));' + "\n\n";
 			}
 			break;
 
 		case 'Assert if exists':
 			if(data.recording) {
 				console.log('Assert if exists: ' + last_right_clicked_element);
-				data.steps = data.steps + 'assertEquals(driver.findElements(By.cssSelector("' + last_right_clicked_element + '")).size(), 1);' + "\n";
+				data.steps = data.steps + 'assertEquals(selectAll("' + last_right_clicked_element + '").size(), 1);' + "\n\n";
 			}
 			break;
 
 		case 'Assert for text':
 			if(data.recording) {
 				console.log('Assert for text: ' + last_right_clicked_element + ' = ' + $(last_right_clicked_element).text());
-				data.steps = data.steps + 'assertEquals(driver.findElements(By.cssSelector("' + last_right_clicked_element + '")).get(0).getText(), "' + $(last_right_clicked_element).text() + '");' + "\n";
+				data.steps = data.steps + 'assertEquals(select("' + last_right_clicked_element + '").getText(), "' + $(last_right_clicked_element).text() + '");' + "\n\n";
 			}
 			break;
 
@@ -63,8 +64,8 @@ chrome.runtime.onMessage.addListener(function(message, sender, callback) {
 			switch(e.type) {
 				case 'click':
 					console.log('click: ' + getCleanCSSSelector(e.target));
-					data.steps = data.steps + '(new WebDriverWait(driver, 10)).until(ExpectedConditions.visibilityOfAllElementsLocatedBy(By.cssSelector("' + getCleanCSSSelector(e.target) + '")));' + "\n";
-					data.steps = data.steps + 'driver.findElements(By.cssSelector("' + getCleanCSSSelector(e.target) + '")).get(0).click();\n\n';
+					data.steps = data.steps + 'waitUntilElementIsVisible("' + getCleanCSSSelector(e.target) + '");' + "\n";
+					data.steps = data.steps + 'select("' + getCleanCSSSelector(e.target) + '").click();\n\n';
 					break;
 
 				case 'change':
