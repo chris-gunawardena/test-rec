@@ -14,8 +14,8 @@ chrome.runtime.onMessage.addListener(function(message, sender, callback) {
 
 		case 'Start recording':
 			data.recording = true;
-			data.steps = 'WebDriver driver = BaseTest.getDriver();\n';
-			data.steps = 'driver.get("http://localhost:4700/' + window.location.hash + '");\n\n';
+			data.steps = data.steps + 'WebDriver driver = BaseTest.getDriver();\n';
+			data.steps = data.steps + 'driver.get("http://localhost:4700/' + window.location.hash + '");\n\n';
 			break;
 
 		case 'Stop recording':
@@ -52,7 +52,7 @@ chrome.runtime.onMessage.addListener(function(message, sender, callback) {
 		case 'Scroll to element':
 			if(data.recording) {
 				console.log('Scroll to element: ' + last_right_clicked_element);
-				data.steps = data.steps + ' CustomConditions.scrollToElement(driver, "' + last_right_clicked_element + '");' + '\n';
+				data.steps = data.steps + ' ElementFinder.scrollToElement("' + last_right_clicked_element + '");' + '\n';
 				data.steps = data.steps + 'waitUntil(elementHasStoppedMoving(select("' + last_right_clicked_element + '")));' + '\n\n';
 			}
 			break;
@@ -61,7 +61,40 @@ chrome.runtime.onMessage.addListener(function(message, sender, callback) {
 			if(!data.recording){
 				console.log('Badge Click');
 				data.recording = true;
+				data.steps = data.steps + 'WebDriver driver = BaseTest.getDriver();\n';
+				data.steps = data.steps + 'driver.get("http://localhost:4700/' + window.location.hash + '");\n\n';
 			}
+			break;
+
+		case 'Play':
+			var post_data = 'package com.sbetcorp.web.autotest.tests;\n';
+			post_data = post_data + 'import com.sbetcorp.web.autotest.BaseTest;\n';
+			post_data = post_data + 'import java.util.List;\n';
+			post_data = post_data + 'import com.sbetcorp.web.autotest.utils.ElementFinder;\n';
+			post_data = post_data + 'import com.sbetcorp.web.autotest.steps.LoginSteps;\n';
+			post_data = post_data + 'import org.openqa.selenium.By;\n';
+			post_data = post_data + 'import org.openqa.selenium.WebDriver;\n';
+			post_data = post_data + 'import org.openqa.selenium.WebElement;\n';
+			post_data = post_data + 'import org.testng.annotations.Test;\n';
+			post_data = post_data + 'import com.sbetcorp.web.autotest.utils.CustomConditions.*;\n';
+			post_data = post_data + 'import com.sbetcorp.web.autotest.utils.ElementFinder.*;\n';
+			post_data = post_data + 'import static com.sbetcorp.web.autotest.utils.CustomConditions.*;\n';
+			post_data = post_data + 'import static com.sbetcorp.web.autotest.utils.ElementFinder.*;\n';
+			post_data = post_data + 'import static org.testng.Assert.assertEquals;\n';
+			post_data = post_data + 'public class TmpTest extends BaseTest {\n';
+			post_data = post_data + '@Test\n';
+			post_data = post_data + 'public void TmpTest() {\n';
+			post_data = post_data + data.steps;
+			post_data = post_data + '}}';
+
+			$.ajax({
+				type: 'POST',
+				url: 'http://localhost:4700/runJavaTest',
+				processData: false,
+				contentType: 'application/json',
+				data: JSON.stringify(post_data)
+			});
+
 			break;
 
 		default:

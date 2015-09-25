@@ -1,6 +1,8 @@
 /*jshint camelcase: false */
 /*global $:false */
 
+
+
 var send_msg_to_current_tab = function(msg_data, callback){
 	console.log('send_msg_to_current_tab', msg_data);
 	chrome.tabs.query({currentWindow: true, active: true}, function(tab) {
@@ -34,6 +36,11 @@ var domready =  function() {
 	// clear recording
 	$('#clear-btn').on('click', function() {
 		send_msg_to_current_tab({ action: 'Clear'}, update_ui);
+	});
+
+	// play recording
+	$('#play-btn').on('click', function() {
+		send_msg_to_current_tab({ action: 'Play'}, update_ui);
 	});
 };
 
