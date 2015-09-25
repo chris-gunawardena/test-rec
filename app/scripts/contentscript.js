@@ -13,7 +13,7 @@ chrome.runtime.onMessage.addListener(function(message, sender, callback) {
 
 		case 'Start recording':
 			data.recording = true;
-			data.steps = 'driver.get("http://localhost:4700/' + window.location.hash + '");\n';
+			data.steps = 'WebDriver driver = BaseTest.getDriver();\ndriver.get("http://localhost:4700/' + window.location.hash + '");\n\n';
 			break;
 
 		case 'Stop recording':
