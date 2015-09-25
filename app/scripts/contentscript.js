@@ -118,7 +118,7 @@ function getCleanCSSSelector(element) {
 
 	for(var dataAttr in element.dataset) {
 		//To Dashed from Camel Case
-		tmp_selector = selector + '[data-' + dataAttr.replace(/([A-Z])/g, function($1){return "-"+$1.toLowerCase();}); + '=\'' +element.dataset[dataAttr] + '\']';
+		tmp_selector = selector + '[data-' + dataAttr.replace(/([A-Z])/g, function($1){return "-"+$1.toLowerCase();}) + '=\'' +element.dataset[dataAttr] + '\']';
 		tmp_accuracy = document.querySelectorAll(tmp_selector).length;
 		if(tmp_accuracy===1)
 		{	return tmp_selector;
