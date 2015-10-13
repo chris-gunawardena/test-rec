@@ -66,6 +66,10 @@ chrome.runtime.onMessage.addListener(function(message, sender, callback) {
 			}
 			break;
 
+		case 'Edit':
+			data.steps = message.steps;
+			break;
+
 		case 'Play':
 			var post_data = 'package com.sbetcorp.web.autotest.tests;\n';
 			post_data = post_data + 'import com.sbetcorp.web.autotest.BaseTest;\n';

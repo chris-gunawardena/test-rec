@@ -3,7 +3,8 @@
   "private": true,
   "version": "0.0.0",
   "dependencies": {
-    "jquery": "~2.1.4"
+    "jquery": "~2.1.4",
+    "ace-builds": "git@github.com:ajaxorg/ace-builds.git#~1.2.0"
   },
   "devDependencies": {
     "chai": "~3.3.0",
