@@ -13,7 +13,7 @@ var send_msg_to_current_tab = function(msg_data, callback){
 var update_ui = function(response_data) {
 	chrome.browserAction.setBadgeText({text: response_data.recording?'Rec':''});
 	$('#record-btn').text(response_data.recording?'Stop recording':'Start recording');
-	if (editor.getValue() != response_data.steps) {
+	if (editor.getValue() !== response_data.steps) {
 		editor.setValue(response_data.steps);
 	}
 };
@@ -49,7 +49,7 @@ var domready =  function() {
     editor = ace.edit('steps-txt');
     editor.setTheme('ace/theme/twilight');
     editor.session.setMode('ace/mode/java');
-    editor.getSession().on('change', function(e) {
+    editor.getSession().on('change', function() {
     	send_msg_to_current_tab({ action: 'Edit', steps: editor.getValue() }, update_ui);
 	});
 };

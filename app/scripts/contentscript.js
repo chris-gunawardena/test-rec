@@ -14,8 +14,7 @@ chrome.runtime.onMessage.addListener(function(message, sender, callback) {
 
 		case 'Start recording':
 			data.recording = true;
-			data.steps = data.steps + 'WebDriver driver = BaseTest.getDriver();\n';
-			data.steps = data.steps + 'driver.get("http://localhost:4700/' + window.location.hash + '");\n\n';
+			data.steps = data.steps + 'casper.thenOpen("http://localhost:4700/' + window.location.hash + '");\n\n';
 			break;
 
 		case 'Stop recording':
@@ -30,22 +29,15 @@ chrome.runtime.onMessage.addListener(function(message, sender, callback) {
 		case 'Wait for element':
 			if(data.recording) {
 				console.log('Wait for element: ' + last_right_clicked_element);
-				data.steps = data.steps + 'waitUntilElementIsVisible("' + last_right_clicked_element + '");' + '\n';
-				data.steps = data.steps + 'waitUntil(elementHasStoppedMoving(select("' + last_right_clicked_element + '")));' + '\n\n';
+				data.steps = data.steps + '.then(function() { casper.waitForSelector("' + last_right_clicked_element + '"); })' + '\n\n';
 			}
 			break;
 
-		case 'Assert if exists':
+		case 'Take screenshot':
 			if(data.recording) {
-				console.log('Assert if exists: ' + last_right_clicked_element);
-				data.steps = data.steps + 'assertEquals(selectAll("' + last_right_clicked_element + '").size(), 1);' + '\n\n';
-			}
-			break;
-
-		case 'Assert text':
-			if(data.recording) {
-				console.log('Assert text: ' + last_right_clicked_element + ' = ' + $(last_right_clicked_element).text());
-				data.steps = data.steps + 'assertEquals(select("' + last_right_clicked_element + '").getText(), "' + $(last_right_clicked_element).text() + '");' + '\n\n';
+				console.log('Take screenshot: ' + last_right_clicked_element);
+				var screenshot_name = prompt('Please enter filename for screenshot', window.location.hash.substr(1).replace(/[|\/]/g, '_'));
+				data.steps = data.steps + '.screenshot("' + last_right_clicked_element + '", "' + screenshot_name + '");' + '\n\n';
 			}
 			break;
 
@@ -61,8 +53,7 @@ chrome.runtime.onMessage.addListener(function(message, sender, callback) {
 			if(!data.recording){
 				console.log('Badge Click');
 				data.recording = true;
-				data.steps = data.steps + 'WebDriver driver = BaseTest.getDriver();\n';
-				data.steps = data.steps + 'driver.get("http://localhost:4700/' + window.location.hash + '");\n\n';
+				data.steps = data.steps + 'casper.thenOpen("http://localhost:4700/' + window.location.hash + '");\n\n';
 			}
 			break;
 
@@ -110,16 +101,18 @@ chrome.runtime.onMessage.addListener(function(message, sender, callback) {
 	}
 });
 
-
 // Listen to every one of these events
 [ 'click', 'change', 'keypress', 'select', 'submit', 'mousedown'].forEach(function(event_name){
 	document.documentElement.addEventListener(event_name, function(e){
+
 		if(data.recording) {
+
 			switch(e.type) {
+
 				case 'click':
 					console.log('click: ' + getCleanCSSSelector(e.target));
-					data.steps = data.steps + 'waitUntilElementIsVisible("' + getCleanCSSSelector(e.target) + '");' + '\n';
-					data.steps = data.steps + 'select("' + getCleanCSSSelector(e.target) + '").click();\n\n';
+					data.steps = data.steps + '.then(function() { casper.waitForSelector("' + getCleanCSSSelector(e.target) + '"); })' + '\n';
+					data.steps = data.steps + '.then(function() { casper.click("' + getCleanCSSSelector(e.target) + '"); })' + '\n\n';
 					break;
 
 				case 'change':
@@ -128,9 +121,32 @@ chrome.runtime.onMessage.addListener(function(message, sender, callback) {
 					break;
 
 				case 'mousedown':
+					//console.log(e);
+					var old_right_clicked_element = last_right_clicked_element;
 					// Store this for later
 					last_right_clicked_element = getCleanCSSSelector(e.target);
+					// If rightclicking
+					if(e.button === 2) {
+						//remove old outline
+						$(old_right_clicked_element).css('outline', 'none');
+						if( $(old_right_clicked_element).contains(last_right_clicked_element) || last_right_clicked_element === old_right_clicked_element) {
+							//find parent
+							last_right_clicked_element = $(last_right_clicked_element).parent();
+						}
+						//add outline
+						$(last_right_clicked_element).css('outline', '1px solid red');
+					}
 					break;
+
+				// case 'mouseover':
+				// 	// add outline
+				// 	$(e.target).css('outline', '1px solid red');
+				// 	break;
+
+				// case 'mouseout':
+				// 	// remove outline
+				// 	$(e.target).css('outline', 'none');
+				// 	break;
 
 				default:
 					console.log(e.type, getCleanCSSSelector(e.target), e.target, e);

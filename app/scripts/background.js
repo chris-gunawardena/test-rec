@@ -16,22 +16,14 @@ chrome.contextMenus.create({
 });
 
 chrome.contextMenus.create({
-	'title': 'Assert if exists',
+	'title': 'Take screenshot',
 	'contexts': ['page', 'selection', 'link'],
 	'onclick' : function(e) {
 		console.log(e);
-		send_msg_to_current_tab({ action: 'Assert if exists', event: e});
+		send_msg_to_current_tab({ action: 'Take screenshot', event: e});
 	}
 });
 
-chrome.contextMenus.create({
-	'title': 'Assert text',
-	'contexts': ['page', 'selection', 'link'],
-	'onclick' : function(e) {
-		console.log(e);
-		send_msg_to_current_tab({ action: 'Assert text', event: e});
-	}
-});
 
 chrome.contextMenus.create({
 	'title': 'Scroll to element',
