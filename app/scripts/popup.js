@@ -1,5 +1,6 @@
 /*jshint camelcase: false */
 /*global $:false */
+/*global ace */
 
 var editor;
 

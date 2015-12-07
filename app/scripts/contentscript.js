@@ -5,8 +5,9 @@ var data = {
 	recording: false,
 	steps: ''
 };
-
+var getCleanCSSSelector = null;
 var last_right_clicked_element = null;
+var last_right_clicked_element_stack = [];
 
 chrome.runtime.onMessage.addListener(function(message, sender, callback) {
 
@@ -36,7 +37,7 @@ chrome.runtime.onMessage.addListener(function(message, sender, callback) {
 		case 'Take screenshot':
 			if(data.recording) {
 				console.log('Take screenshot: ' + last_right_clicked_element);
-				var screenshot_name = prompt('Please enter filename for screenshot', window.location.hash.substr(1).replace(/[|\/]/g, '_'));
+				var screenshot_name = window.prompt('Please enter filename for screenshot', window.location.hash.substr(1).replace(/[|\/]/g, '_'));
 				data.steps = data.steps + '.screenshot("' + last_right_clicked_element + '", "' + screenshot_name + '");' + '\n\n';
 			}
 			break;
@@ -102,60 +103,80 @@ chrome.runtime.onMessage.addListener(function(message, sender, callback) {
 });
 
 // Listen to every one of these events
-[ 'click', 'change', 'keypress', 'select', 'submit', 'mousedown'].forEach(function(event_name){
+[ 'click', 'change', 'keypress', 'select', 'submit', 'mousewheel', 'contextmenu'].forEach(function(event_name){
 	document.documentElement.addEventListener(event_name, function(e){
 
 		if(data.recording) {
 
+			console.log(e);
 			switch(e.type) {
 
 				case 'click':
-					console.log('click: ' + getCleanCSSSelector(e.target));
 					data.steps = data.steps + '.then(function() { casper.waitForSelector("' + getCleanCSSSelector(e.target) + '"); })' + '\n';
 					data.steps = data.steps + '.then(function() { casper.click("' + getCleanCSSSelector(e.target) + '"); })' + '\n\n';
 					break;
 
 				case 'change':
-					console.log('change: ', getCleanCSSSelector(e.target) + ' ' + $(e.target).val());
-					data.steps = data.steps + '((JavascriptExecutor) driver).executeScript("$(\'' + getCleanCSSSelector(e.target) + '\').val(\'' + $(e.target).val() + '\').trigger(\'change\')");\n\n';
+					// console.log('change: ', getCleanCSSSelector(e.target) + ' ' + $(e.target).val());
+					// data.steps = data.steps + '((JavascriptExecutor) driver).executeScript("$(\'' + getCleanCSSSelector(e.target) + '\').val(\'' + $(e.target).val() + '\').trigger(\'change\')");\n\n';
 					break;
 
-				case 'mousedown':
-					//console.log(e);
-					var old_right_clicked_element = last_right_clicked_element;
-					// Store this for later
-					last_right_clicked_element = getCleanCSSSelector(e.target);
-					// If rightclicking
-					if(e.button === 2) {
-						//remove old outline
-						$(old_right_clicked_element).css('outline', 'none');
-						if( $(old_right_clicked_element).contains(last_right_clicked_element) || last_right_clicked_element === old_right_clicked_element) {
-							//find parent
-							last_right_clicked_element = $(last_right_clicked_element).parent();
-						}
-						//add outline
-						$(last_right_clicked_element).css('outline', '1px solid red');
+				case 'contextmenu':
+					// if right cliking and nothing is selected, select something
+					if ($('.test-rec-outline').length === 0) {
+						// remove old outline
+						$(last_right_clicked_element).removeClass('test-rec-outline');
+						// get css selector
+						last_right_clicked_element = getCleanCSSSelector(e.target);
+						// add outline
+						$(last_right_clicked_element).addClass('test-rec-outline');
+						// // Stop opening the contex menu to allow change bounding box
+						// e.preventDefault();
+					}
+					// cancel if not clicking on the same element or its children
+					else if (!$(e.target).is($('.test-rec-outline')) && !$('.test-rec-outline').has($(e.target)).length) {
+						// remove old outline
+						$(last_right_clicked_element).removeClass('test-rec-outline');
+						// Stop opening the contex menu
+						e.preventDefault();
 					}
 					break;
 
-				// case 'mouseover':
-				// 	// add outline
-				// 	$(e.target).css('outline', '1px solid red');
-				// 	break;
+				case 'mousewheel':
+					// if somthing is selected
+					if($('.test-rec-outline').length) {
+						// stop scrolling
+						e.preventDefault();
+						// remove old outline
+						$(last_right_clicked_element).removeClass('test-rec-outline');
+						// up
+						if(e.wheelDeltaY > 0) {
+							debugger;
+							// get new parent
+							var parent = $(last_right_clicked_element).parent().get(0);
+							if(parent) {
+								last_right_clicked_element_stack.push(last_right_clicked_element);
+								last_right_clicked_element = getCleanCSSSelector(parent);
+							}
+						}else if(last_right_clicked_element_stack.length){
+							last_right_clicked_element = last_right_clicked_element_stack.pop();
+						}
+						// add new outline
+						$(last_right_clicked_element).addClass('test-rec-outline');
+					}
+					break;
 
-				// case 'mouseout':
-				// 	// remove outline
-				// 	$(e.target).css('outline', 'none');
-				// 	break;
-
-				default:
-					console.log(e.type, getCleanCSSSelector(e.target), e.target, e);
+				//default:
+				//	console.log(e.type, getCleanCSSSelector(e.target), e.target, e);
 			}			
 		}
 	}, true);
 });
 
-function getCleanCSSSelector(element) {
+// Add class used to highlight elements
+$('head').append($('<style>').text('.test-rec-outline{outline: 1px solid red;}'));
+
+getCleanCSSSelector = function(element) {
 	if(!element) {return;}
 	var selector = element.tagName ? element.tagName.toLowerCase() : '';
 	if(selector === '' || selector === 'html') {return '';}
@@ -245,4 +266,4 @@ function getCleanCSSSelector(element) {
 	}
 
 	return selector;
-}
+};
