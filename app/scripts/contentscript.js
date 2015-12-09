@@ -15,7 +15,7 @@ chrome.runtime.onMessage.addListener(function(message, sender, callback) {
 
 		case 'Start recording':
 			data.recording = true;
-			data.steps = data.steps + 'casper.thenOpen("http://localhost:4700/' + window.location.hash + '");\n\n';
+			data.steps = data.steps + 'casper.thenOpen(\'http://localhost:4700/' + window.location.hash + '\')\n\n';
 			break;
 
 		case 'Stop recording':
@@ -30,7 +30,14 @@ chrome.runtime.onMessage.addListener(function(message, sender, callback) {
 		case 'Wait for element':
 			if(data.recording) {
 				console.log('Wait for element: ' + last_right_clicked_element);
-				data.steps = data.steps + '.then(function() { casper.waitForSelector("' + last_right_clicked_element + '"); })' + '\n\n';
+				data.steps = data.steps + '.then(function() { casper.waitForSelector(\'' + last_right_clicked_element + '\'); })' + '\n\n';
+			}
+			break;
+
+		case 'Wait while element exists':
+			if(data.recording) {
+				console.log('Wait while element exists: ' + last_right_clicked_element);
+				data.steps = data.steps + '.then(function() { casper.waitWhileSelector(\'' + last_right_clicked_element + '\'); })' + '\n\n';
 			}
 			break;
 
@@ -38,15 +45,21 @@ chrome.runtime.onMessage.addListener(function(message, sender, callback) {
 			if(data.recording) {
 				console.log('Take screenshot: ' + last_right_clicked_element);
 				var screenshot_name = window.prompt('Please enter filename for screenshot', window.location.hash.substr(1).replace(/[|\/]/g, '_'));
-				data.steps = data.steps + '.screenshot("' + last_right_clicked_element + '", "' + screenshot_name + '");' + '\n\n';
+				data.steps = data.steps + '.then(function() { phantomcss.screenshot(\'' + last_right_clicked_element + '\', \'' + screenshot_name + '\')})' + '\n\n';
 			}
 			break;
 
 		case 'Scroll to element':
 			if(data.recording) {
-				console.log('Scroll to element: ' + last_right_clicked_element);
-				data.steps = data.steps + ' ElementFinder.scrollToElement("' + last_right_clicked_element + '");' + '\n';
-				data.steps = data.steps + 'waitUntil(elementHasStoppedMoving(select("' + last_right_clicked_element + '")));' + '\n\n';
+				console.log('Disable animations');
+				data.steps = data.steps + '.then(function() {casper.evaluate(function() {$(\'body\').scrollTo(\'' + last_right_clicked_element + '\',{duration:0, offsetTop : \'50\'});});})' + '\n\n';
+			}
+			break;
+
+		case 'Disable animations':
+			if(data.recording) {
+				console.log('Disable animations');
+				data.steps = data.steps + '.then(function() {casper.evaluate(function() {var style = document.createElement(\'style\');style.innerHTML = \'* { -webkit-animation-delay: 0.01s !important; -webkit-animation-duration: 0.01s !important;  -webkit-transition-delay: 0.01s !important; -webkit-transition-duration: 0.01s !important; }\';document.body.appendChild(style);});})' + '\n\n';
 			}
 			break;
 
@@ -54,43 +67,12 @@ chrome.runtime.onMessage.addListener(function(message, sender, callback) {
 			if(!data.recording){
 				console.log('Badge Click');
 				data.recording = true;
-				data.steps = data.steps + 'casper.thenOpen("http://localhost:4700/' + window.location.hash + '");\n\n';
+				data.steps = data.steps + 'casper.thenOpen(\'http://localhost:4700/' + window.location.hash + '\')\n\n';
 			}
 			break;
 
 		case 'Edit':
 			data.steps = message.steps;
-			break;
-
-		case 'Play':
-			var post_data = 'package com.sbetcorp.web.autotest.tests;\n';
-			post_data = post_data + 'import com.sbetcorp.web.autotest.BaseTest;\n';
-			post_data = post_data + 'import java.util.List;\n';
-			post_data = post_data + 'import com.sbetcorp.web.autotest.utils.ElementFinder;\n';
-			post_data = post_data + 'import com.sbetcorp.web.autotest.steps.LoginSteps;\n';
-			post_data = post_data + 'import org.openqa.selenium.By;\n';
-			post_data = post_data + 'import org.openqa.selenium.WebDriver;\n';
-			post_data = post_data + 'import org.openqa.selenium.WebElement;\n';
-			post_data = post_data + 'import org.testng.annotations.Test;\n';
-			post_data = post_data + 'import com.sbetcorp.web.autotest.utils.CustomConditions.*;\n';
-			post_data = post_data + 'import com.sbetcorp.web.autotest.utils.ElementFinder.*;\n';
-			post_data = post_data + 'import static com.sbetcorp.web.autotest.utils.CustomConditions.*;\n';
-			post_data = post_data + 'import static com.sbetcorp.web.autotest.utils.ElementFinder.*;\n';
-			post_data = post_data + 'import static org.testng.Assert.assertEquals;\n';
-			post_data = post_data + 'public class TmpTest extends BaseTest {\n';
-			post_data = post_data + '@Test\n';
-			post_data = post_data + 'public void TmpTest() {\n';
-			post_data = post_data + data.steps;
-			post_data = post_data + '}}';
-
-			$.ajax({
-				type: 'POST',
-				url: 'http://localhost:4700/runJavaTest',
-				processData: false,
-				contentType: 'application/json',
-				data: JSON.stringify(post_data)
-			});
-
 			break;
 
 		default:
@@ -112,13 +94,13 @@ chrome.runtime.onMessage.addListener(function(message, sender, callback) {
 			switch(e.type) {
 
 				case 'click':
-					data.steps = data.steps + '.then(function() { casper.waitForSelector("' + getCleanCSSSelector(e.target) + '"); })' + '\n';
-					data.steps = data.steps + '.then(function() { casper.click("' + getCleanCSSSelector(e.target) + '"); })' + '\n\n';
+					data.steps = data.steps + '.then(function() { casper.waitForSelector(\'' + getCleanCSSSelector(e.target) + '\'); })' + '\n';
+					data.steps = data.steps + '.then(function() { casper.click(\'' + getCleanCSSSelector(e.target) + '\'); })' + '\n\n';
 					break;
 
 				case 'change':
 					// console.log('change: ', getCleanCSSSelector(e.target) + ' ' + $(e.target).val());
-					// data.steps = data.steps + '((JavascriptExecutor) driver).executeScript("$(\'' + getCleanCSSSelector(e.target) + '\').val(\'' + $(e.target).val() + '\').trigger(\'change\')");\n\n';
+					// data.steps = data.steps + '((JavascriptExecutor) driver).executeScript(\'$(\'' + getCleanCSSSelector(e.target) + '\').val(\'' + $(e.target).val() + '\').trigger(\'change\')\');\n\n';
 					break;
 
 				case 'contextmenu':
@@ -151,7 +133,6 @@ chrome.runtime.onMessage.addListener(function(message, sender, callback) {
 						$(last_right_clicked_element).removeClass('test-rec-outline');
 						// up
 						if(e.wheelDeltaY > 0) {
-							debugger;
 							// get new parent
 							var parent = $(last_right_clicked_element).parent().get(0);
 							if(parent) {
@@ -174,7 +155,7 @@ chrome.runtime.onMessage.addListener(function(message, sender, callback) {
 });
 
 // Add class used to highlight elements
-$('head').append($('<style>').text('.test-rec-outline{outline: 1px solid red;}'));
+$('head').append($('<style>').text('.test-rec-outline{outline: 1px solid red; -webkit-box-shadow: inset 0px 0px 14px 5px rgba(255,0,0,0.75);}'));
 
 getCleanCSSSelector = function(element) {
 	if(!element) {return;}
@@ -187,7 +168,7 @@ getCleanCSSSelector = function(element) {
 
 	// // automations id
 	// if(element.dataset.automationId) {
-	// 	tmp_selector = selector + '[data-automation-id="' + element.dataset.automationId + '"]';
+	// 	tmp_selector = selector + '[data-automation-id=\'' + element.dataset.automationId + '\']';
 	// 	tmp_accuracy = document.querySelectorAll(tmp_selector).length;
 	// 	if(accuracy===1) {return tmp_accuracy;}
 	// 	if(tmp_accuracy<accuracy) {selector = tmp_selector;}
@@ -202,7 +183,7 @@ getCleanCSSSelector = function(element) {
 
 	for(var dataAttr in element.dataset) {
 		//To Dashed from Camel Case
-		tmp_selector = selector + '[data-' + dataAttr.replace(/([A-Z])/g, function($1){return '-'+$1.toLowerCase();}) + '=\'' +element.dataset[dataAttr] + '\']';
+		tmp_selector = selector + '[data-' + dataAttr.replace(/([A-Z])/g, function($1){return '-'+$1.toLowerCase();}) + '=\\\'' +element.dataset[dataAttr] + '\\\']';
 		tmp_accuracy = document.querySelectorAll(tmp_selector).length;
 		if(tmp_accuracy===1)
 		{	return tmp_selector;
@@ -213,7 +194,7 @@ getCleanCSSSelector = function(element) {
 		}
 	}
 
-	//document.querySelectorAll( "#se_exotics-selections-1-2165217 > div:nth-child(2) .rc-content-exotic-selection-btn.btn.exotic-selected" )[0].dataset
+	//document.querySelectorAll( \'#se_exotics-selections-1-2165217 > div:nth-child(2) .rc-content-exotic-selection-btn.btn.exotic-selected\' )[0].dataset
 
 	if(element.className) {
 		tmp_selector = '.' + element.className.trim().replace(/ /g,'.');
